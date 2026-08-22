@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$script:Revision = 'R16.5-single-column-recents-ui'
+$script:Revision = 'R16.6-auto-steam-language-i18n'
 $script:KnownCountryCodes = @(
 'AF','AL','DZ','AD','AO','AR','AM','AU','AT','AZ','BH','BD','BY','BE','BT','BO','BA','BR','BN','BG','KH','CM','CA','TD','CL','CO','KM','CD','CR','HR','CU','CY','CZ','CI','DK','DO','EC','EG','SV','ER','EE','ET','FI','FR','GA','GE','DE','GH','GR','GL','GT','GN','HT','HN','HK','HU','IS','IN','ID','IQ','IE','IL','IT','JM','JP','JO','KZ','KE','XK','KW','KG','LA','LV','LB','LY','LI','LT','LU','MO','MY','MT','MR','MU','MX','MD','MC','MN','ME','MA','MZ','MM','NP','NL','NZ','NI','NE','NG','NO','OM','PK','PA','PG','PY','PE','PH','PL','PT','PR','QA','RO','RU','RW','SA','SN','RS','SG','SK','SI','ZA','KR','ES','LK','SD','SE','CH','SY','TW','TZ','TH','TL','TG','TT','TN','TR','TM','UG','UA','AE','GB','US','UY','UZ','VE','VN','YE','ZM','ZW'
 )

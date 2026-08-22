@@ -349,7 +349,7 @@ class Plugin:
             return result
 
     async def _main(self):
-        decky.logger.info("Proton VPN 1.0.0 R16.5 loaded (single-column recents / fast Proton-log state detection / aligned dropdown hover)")
+        decky.logger.info("Proton VPN 1.0.0 R16.6 loaded (automatic Steam language / 31 full-platform translations / localized country names)")
 
     async def _unload(self):
         decky.logger.info("Proton VPN unloaded")

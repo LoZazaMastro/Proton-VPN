@@ -4,7 +4,7 @@ Decky Loader plugin for controlling an installed Proton VPN Windows client from 
 
 **Version:** 1.0.0  
 **Author:** LoZazaMastro  
-**Internal build:** `R16.2-qam-state-first-input-embedded-flags`
+**Internal build:** `R16.6-auto-steam-language-i18n`
 
 ## QAM layout
 
@@ -12,14 +12,55 @@ The panel deliberately stays compact:
 
 - **Proton VPN** title with plugin icon
 - **VPN** toggle
-- **Stato**
-- **Paese**
-- country dropdown with text-only country names
-- one summary card below the dropdown with a **large country flag**, country name and:
+- localized **Status** row
+- localized **Country** label
+- text-only country selector
+- one summary card with a **large country flag**, localized country name and:
   - green closed lock when the VPN is active
   - red open lock when the VPN is inactive
+- up to six unique recent successful countries in one vertical column
 
-Country flags are bundled locally; they are not fetched from the network and are not shown inside the dropdown.
+Country flags are bundled locally; they are not fetched from the network and are not shown inside the country menu.
+
+## Localization
+
+R16.6 automatically follows the Steam client language through `SteamClient.Settings.GetCurrentLanguage()` and falls back to the browser locale/English only if Steam language detection is unavailable.
+
+The QAM UI supports all current Steam full-platform languages:
+
+- Arabic
+- Bulgarian
+- Chinese (Simplified)
+- Chinese (Traditional)
+- Czech
+- Danish
+- Dutch
+- English
+- Finnish
+- French
+- German
+- Greek
+- Hungarian
+- Indonesian
+- Italian
+- Japanese
+- Korean
+- Malay
+- Norwegian
+- Polish
+- Portuguese (Portugal)
+- Portuguese (Brazil)
+- Romanian
+- Russian
+- Spanish (Spain)
+- Spanish (Latin America)
+- Swedish
+- Thai
+- Turkish
+- Ukrainian
+- Vietnamese
+
+Country names are localized dynamically with `Intl.DisplayNames` in the detected Steam locale, with the bundled English country list as a fallback. Arabic uses RTL direction in the QAM content.
 
 ## Connection behavior
 
@@ -28,7 +69,8 @@ Country flags are bundled locally; they are not fetched from the network and are
 - Serializes connect/disconnect operations so QAM refreshes cannot start a second helper operation in parallel.
 - Suppresses duplicate same-country connect requests.
 - If the requested country is already active, no process or service is touched.
-- Keeps the successful country in `RecentConnections.bin` instead of restoring that file while Proton is alive, avoiding the live-file race introduced during the R15 experiment.
+- Keeps up to six unique recent successful countries for quick reconnection.
+- Connection completion uses fresh Proton client-log `Connected` events first, with Windows route detection as fallback.
 
 ## Current technical limitation
 
@@ -36,20 +78,11 @@ The current country-selection mechanism still relies on Proton's `RecentConnecti
 
 For a **real switch from one active country to another**, this stable branch uses one deterministic tunnel reset before the client reloads the selected recent connection. It does **not** claim to be true zero-restart switching. Same-country selections are immediate and do not reset anything.
 
-The proper future architecture for zero-service-restart switching is Proton's internal gRPC named-pipe `IVpnController`, which the official Windows client itself uses for `Connect` / `Disconnect`. That route should be implemented and tested separately rather than mixed into the stable fallback speculatively.
+The proper future architecture for zero-service-restart switching is Proton's internal gRPC named-pipe controller. Proton's service authorizes the official `ProtonVPN.Client.exe`, so an external Decky helper cannot simply call that endpoint without invasive techniques. This plugin deliberately does not use UI automation, injection or binary patching.
 
 ## Notes
 
 - Windows only.
 - Proton VPN must already be installed and authenticated at least once.
 - No mouse/keyboard focus automation and no `interact UI` path is used.
-
-
-### Internal R16.5 test build
-- Recent connections are now shown in one vertical column, each button matching the full width of the Country selector.
-
-- Country menu focus/hover keeps white text and uses a white outline.
-- Drop-down popup is box-sized to exactly the trigger width.
-- Up to six unique recent successful countries are persisted and shown below the active-country card.
-- Connection completion uses fresh Proton client-log Connected events first, with Windows route detection only as fallback.
-- QAM status skips full diagnostics and uses the fast route probe.
+- Public plugin version remains **1.0.0** until intentionally changed.
