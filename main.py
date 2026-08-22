@@ -102,7 +102,7 @@ class Plugin:
             flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
             decky.logger.info(f"Proton VPN: helper start action={action} country={country_code or '-'}")
             try:
-                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30, creationflags=flags)
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=40, creationflags=flags)
             except subprocess.TimeoutExpired as exc:
                 trace = exc.stderr or exc.stdout or ""
                 if isinstance(trace, bytes):

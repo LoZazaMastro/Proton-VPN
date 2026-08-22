@@ -515,7 +515,7 @@ function Content() {
     updateStatusText(tx("connectingTo", { country: countryName(normalized, locale) }));
 
     try {
-      const r = await withTimeout(connectCountry(normalized), 18000, tx("timeoutConnect"));
+      const r = await withTimeout(connectCountry(normalized), 32000, tx("timeoutConnect"));
       if (r && Array.isArray(r.recent_countries)) updateRecentCountries(r.recent_countries);
       if (!r || !r.ok) {
         updateConnected(!!(r && r.connected));
