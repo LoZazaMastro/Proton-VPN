@@ -1,0 +1,14 @@
+{
+  "name": "Proton VPN",
+  "author": "LoZazaMastro",
+  "api_version": 1,
+  "flags": [],
+  "publish": {
+    "tags": [
+      "windows",
+      "vpn",
+      "network"
+    ],
+    "description": "Control the installed Proton VPN Windows app directly from Decky Quick Access."
+  }
+}

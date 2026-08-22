@@ -1,0 +1,4 @@
+Country flag images in this folder were rendered from the Noto Color Emoji glyphs available in the build environment.
+Noto Emoji is Copyright 2013-2017 Google Inc. and contributors.
+Font software is distributed under the SIL Open Font License 1.1.
+No font file is bundled in this project.
