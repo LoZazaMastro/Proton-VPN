@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$script:Revision = 'R18-structured-recent-connect'
+$script:Revision = 'R19-safe-template-start'
 $script:KnownCountryCodes = @(
 'AF','AL','DZ','AD','AO','AR','AM','AU','AT','AZ','BH','BD','BY','BE','BT','BO','BA','BR','BN','BG','KH','CM','CA','TD','CL','CO','KM','CD','CR','HR','CU','CY','CZ','CI','DK','DO','EC','EG','SV','ER','EE','ET','FI','FR','GA','GE','DE','GH','GR','GL','GT','GN','HT','HN','HK','HU','IS','IN','ID','IQ','IE','IL','IT','JM','JP','JO','KZ','KE','XK','KW','KG','LA','LV','LB','LY','LI','LT','LU','MO','MY','MT','MR','MU','MX','MD','MC','MN','ME','MA','MZ','MM','NP','NL','NZ','NI','NE','NG','NO','OM','PK','PA','PG','PY','PE','PH','PL','PT','PR','QA','RO','RU','RW','SA','SN','RS','SG','SK','SI','ZA','KR','ES','LK','SD','SE','CH','SY','TW','TZ','TH','TL','TG','TT','TN','TR','TM','UG','UA','AE','GB','US','UY','UZ','VE','VN','YE','ZM','ZW'
 )
@@ -236,94 +236,20 @@ function Set-OuterSetting([object]$Object, [string]$Name, [object]$Value) {
     else { $Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value }
 }
 
-function Set-TemporaryAutoConnectRecent([string]$SettingsFile, [guid]$RecentId) {
+function Set-TemporaryAutoConnectLast([string]$SettingsFile) {
     $raw = [IO.File]::ReadAllText($SettingsFile)
     $outer = $raw | ConvertFrom-Json -ErrorAction Stop
-
-    # Proton stores a dictionary<string,string>: values are JSON strings inside the outer JSON file.
     Set-OuterSetting $outer 'IsAutoConnectEnabled' 'true'
 
-    # Proton DefaultConnectionType: Fastest=0, Last=1, Recent=2, Random=3.
-    # Point at one exact recent instead of relying on list order or connection timestamps.
+    # Proton resolves Last from the first recent connection when timestamps tie.
     $inner = [pscustomobject]@{
-        Type = 2
-        RecentId = $RecentId.ToString()
+        Type = 1
+        RecentId = '00000000-0000-0000-0000-000000000000'
     }
     Set-OuterSetting $outer 'DefaultConnection' ($inner | ConvertTo-Json -Compress)
 
     $newOuter = $outer | ConvertTo-Json -Depth 30
     [IO.File]::WriteAllText($SettingsFile, $newOuter, (New-Object Text.UTF8Encoding($false)))
-}
-
-function Set-StructuredRecentCountry([string]$ClientPath, [string]$RecentFile, [string]$TargetCode) {
-    $clientDirectory = Split-Path -Parent $ClientPath
-    $required = @(
-        'protobuf-net.Core.dll',
-        'protobuf-net.dll',
-        'ProtonVPN.Serialization.Contracts.dll',
-        'ProtonVPN.Client.Logic.Connection.Contracts.dll',
-        'ProtonVPN.Client.Logic.Recents.Contracts.dll',
-        'ProtonVPN.Serialization.Protobuf.Entities.dll',
-        'ProtonVPN.Serialization.Protobuf.dll'
-    )
-    foreach ($name in $required) {
-        $path = Join-Path $clientDirectory $name
-        if (-not (Test-Path $path)) { throw ('Libreria Proton richiesta non trovata: ' + $name) }
-        [Reflection.Assembly]::LoadFrom($path) | Out-Null
-    }
-
-    $entitiesAssembly = [Reflection.Assembly]::LoadFrom((Join-Path $clientDirectory 'ProtonVPN.Serialization.Protobuf.Entities.dll'))
-    $protobufAssembly = [Reflection.Assembly]::LoadFrom((Join-Path $clientDirectory 'ProtonVPN.Serialization.Protobuf.dll'))
-    $recentsAssembly = [Reflection.Assembly]::LoadFrom((Join-Path $clientDirectory 'ProtonVPN.Client.Logic.Recents.Contracts.dll'))
-    $entitiesType = $entitiesAssembly.GetType('ProtonVPN.Serialization.Protobuf.Entities.ProtobufSerializableEntities', $true)
-    $serializerType = $protobufAssembly.GetType('ProtonVPN.Serialization.Protobuf.ProtobufSerializer', $true)
-    $recentType = $recentsAssembly.GetType('ProtonVPN.Client.Logic.Recents.Contracts.SerializableEntities.SerializableRecentConnection', $true)
-    $entities = [Activator]::CreateInstance($entitiesType)
-    $serializer = [Activator]::CreateInstance($serializerType, @($entities))
-    $listType = [System.Collections.Generic.List``1].MakeGenericType($recentType)
-
-    $input = [IO.MemoryStream]::new([IO.File]::ReadAllBytes($RecentFile))
-    try {
-        $deserialize = $serializerType.GetMethod('Deserialize').MakeGenericMethod($listType)
-        $recents = $deserialize.Invoke($serializer, @($input))
-    } finally {
-        $input.Dispose()
-    }
-    if ($null -eq $recents -or $recents.Count -eq 0) { throw 'Proton non contiene connessioni recenti utilizzabili.' }
-
-    $selected = $null
-    foreach ($recent in $recents) {
-        $location = $recent.ConnectionIntent.Location
-        if ($null -ne $location -and [string]$location.TypeName -eq 'SingleCountryLocationIntent') {
-            $selected = $recent
-            break
-        }
-    }
-    if ($null -eq $selected) {
-        throw 'Proton non contiene un modello recente per la selezione del paese.'
-    }
-    $selectedId = [guid]$selected.RecentId
-    if ($selectedId -eq [guid]::Empty) { throw 'Il modello recente Proton non contiene un identificatore valido.' }
-
-    $sourceCode = [string]$selected.ConnectionIntent.Location.CountryCode
-    $selected.ConnectionIntent.Location.CountryCode = $TargetCode
-    if ($selected.PSObject.Properties.Name -contains 'LastConnectionTime') {
-        $selected.LastConnectionTime = [DateTime]::UtcNow
-    }
-
-    $serialize = $serializerType.GetMethod('Serialize').MakeGenericMethod($listType)
-    $output = $serialize.Invoke($serializer, [object[]]@(,$recents))
-    try {
-        [IO.File]::WriteAllBytes($RecentFile, $output.ToArray())
-    } finally {
-        $output.Dispose()
-    }
-
-    return [pscustomobject]@{
-        recent_id = $selectedId
-        source_code = $sourceCode
-        records = [int]$recents.Count
-    }
 }
 
 function Find-ByteSequenceOffsets([byte[]]$Bytes, [byte[]]$Needle) {
@@ -741,12 +667,45 @@ function Start-ProtonClient([string]$ClientPath, [bool]$Background = $true) {
     } else {
         Write-Trace ('client-start:already-running count=' + $existing.Count)
     }
-    if ($Background) {
-        for ($i = 0; $i -lt 2; $i++) {
-            Start-Sleep -Milliseconds 120
-            Hide-ProtonClientWindows
+    $ready = $false
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    do {
+        $client = @(Get-Process -Name 'ProtonVPN.Client' -ErrorAction SilentlyContinue | Select-Object -First 1)
+        if ($client.Count -gt 0) {
+            try {
+                $client[0].Refresh()
+                if (-not $client[0].HasExited -and $client[0].Responding) {
+                    $ready = $true
+                    break
+                }
+            } catch {}
         }
+        if ($Background) { Hide-ProtonClientWindows }
+        Start-Sleep -Milliseconds 150
+    } while ($sw.ElapsedMilliseconds -lt 8000)
+
+    if (-not $ready -and $launcherPath) {
+        Write-Trace 'client-start:launcher-timeout direct-client-fallback=true'
+        Start-Process -FilePath $ClientPath -WorkingDirectory (Split-Path -Parent $ClientPath) -WindowStyle $windowStyle | Out-Null
+        $fallback = [Diagnostics.Stopwatch]::StartNew()
+        do {
+            $client = @(Get-Process -Name 'ProtonVPN.Client' -ErrorAction SilentlyContinue | Select-Object -First 1)
+            if ($client.Count -gt 0) {
+                try {
+                    $client[0].Refresh()
+                    if (-not $client[0].HasExited -and $client[0].Responding) {
+                        $ready = $true
+                        break
+                    }
+                } catch {}
+            }
+            if ($Background) { Hide-ProtonClientWindows }
+            Start-Sleep -Milliseconds 150
+        } while ($fallback.ElapsedMilliseconds -lt 5000)
     }
+    if (-not $ready) { throw 'Proton VPN non ha completato l''avvio entro il tempo previsto.' }
+    if ($Background) { Hide-ProtonClientWindows }
+    Write-Trace ('client-start:ready elapsed_ms=' + $sw.ElapsedMilliseconds)
 }
 
 function Get-Diagnostics {
@@ -1003,10 +962,21 @@ try {
         Copy-Item -LiteralPath $diag.settings_file -Destination $settingsBackup -Force
         Copy-Item -LiteralPath $diag.recents_file -Destination $recentBackup -Force
 
-        $recent = Set-StructuredRecentCountry $diag.client_path $diag.recents_file $CountryCode
-        Write-Trace ('recent-structured:records=' + $recent.records + ' id=' + $recent.recent_id + ' source=' + $recent.source_code + ' target=' + $CountryCode)
-        Set-TemporaryAutoConnectRecent $diag.settings_file $recent.recent_id
-        Write-Trace ('temporary-default:Recent id=' + $recent.recent_id + ' target=' + $CountryCode)
+        # Proton 5.1.x targets .NET 8, which cannot be loaded into Decky's Windows
+        # PowerShell/.NET Framework host. Patch only the fixed-width country bytes in
+        # the validated protobuf records and let Proton deserialize its own file.
+        $patch = Patch-SingleCountryTemplates $diag.recents_file $CountryCode
+        Write-Trace ('template-scan:templates=' + $patch.templates + ' patched=' + $patch.patched + ' source=' + (($patch.source_codes) -join ','))
+        if ($patch.patched -le 0) {
+            throw 'Nessun template paese utilizzabile trovato nei recenti Proton.'
+        }
+        $promote = Promote-SingleCountryTemplateToFront $diag.recents_file
+        Write-Trace ('recent-promote:ok=' + $promote.ok + ' records=' + $promote.records + ' match=' + $promote.match + ' moved=' + $promote.moved + ' reason=' + $promote.reason)
+        if (-not $promote.ok) {
+            throw ('Il formato dei recenti Proton non e supportato: ' + $promote.reason)
+        }
+        Set-TemporaryAutoConnectLast $diag.settings_file
+        Write-Trace ('temporary-default:Last target=' + $CountryCode)
         $connectLogMarker = Get-ClientLogMarker
         Write-Trace ('connect-log-marker:path=' + ($(if ($connectLogMarker.path) { $connectLogMarker.path } else { 'none' })) + ' length=' + $connectLogMarker.length)
         Start-ProtonClient $diag.client_path $true
