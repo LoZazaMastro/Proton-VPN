@@ -1,53 +1,53 @@
 <div align="center">
 
-# Proton VPN per Decky
+# Proton VPN for Decky
 
-### La VPN nel QAM, senza trasformare il controller in un mouse.
+### Your VPN in the QAM, without turning your controller into a mouse.
 
-Controlla il client Proton VPN per Windows da Steam Big Picture con stato reale, scelta del Paese e collegamenti recenti.
+Control the Proton VPN client for Windows from Steam Big Picture with real-time status, country selection, and recent connections.
 
 [![Release](https://img.shields.io/github/v/release/LoZazaMastro/Proton-VPN?style=for-the-badge&label=Release&labelColor=111111&color=ffffff)](https://github.com/LoZazaMastro/Proton-VPN/releases/latest)
 [![Licenza MIT](https://img.shields.io/badge/Licenza-MIT-ffffff?style=for-the-badge&labelColor=111111)](LICENSE)
 
 </div>
 
-## Proton VPN, senza lasciare Steam
+## Proton VPN, without leaving Steam
 
-Il plugin controlla un'installazione esistente di Proton VPN e mantiene il pannello essenziale: interruttore, stato, Paese attivo, selettore e gli ultimi sei collegamenti riusciti. Le bandiere sono incluse localmente e i nomi dei Paesi seguono la lingua di Steam.
+The plugin controls an existing Proton VPN installation and maintains an essential panel: a toggle switch, connection status, the active country, a country selector, and your last six successful connections. Flags are included locally, and country names adapt to Steam's language settings.
 
-- avvio automatico di `ProtonVPN.Client.exe` quando necessario;
-- stato e Paese letti dagli eventi reali del client Proton;
-- operazioni di connessione e disconnessione serializzate;
-- richieste duplicate verso lo stesso Paese ignorate;
-- fino a sei Paesi recenti, senza duplicati;
-- interfaccia localizzata per tutte le lingue complete attualmente esposte da Steam;
-- layout RTL per l'arabo;
-- nessuna automazione di mouse o tastiera, injection o modifica dei binari Proton.
+- automatic launch of `ProtonVPN.Client.exe` when needed;
+- status and active country read from real Proton client events;
+- serialized connection and disconnection operations;
+- duplicate requests to the same country are automatically ignored;
+- stores up to six recent countries with no duplicates;
+- localized interface for all complete languages currently supported by Steam;
+- RTL layout support for Arabic;
+- no mouse or keyboard automation, code injection, or modifications to Proton binaries.
 
-## Requisiti
+## Requirements
 
 - Windows;
-- [Decky Loader](https://decky.xyz) e Steam Big Picture;
-- client ufficiale Proton VPN già installato e autenticato almeno una volta.
+- [Decky Loader](https://decky.xyz) and Steam Big Picture;
+- official Proton VPN client installed and authenticated at least once.
 
-## Limite tecnico attuale
+## Current technical limitation
 
-Proton VPN per Windows non espone una CLI pubblica supportata per cambiare Paese. La versione 1.0.0 usa quindi `RecentConnections.bin` e un passaggio temporaneo su `DefaultConnection=Last`.
+Proton VPN for Windows does not expose a supported public CLI to switch countries. Version 1.0.0 therefore utilizes `RecentConnections.bin` and a temporary switch to `DefaultConnection=Last`.
 
-Se scegli un Paese diverso mentre la VPN è già connessa, il plugin esegue un singolo reset deterministico del tunnel prima che il client ricarichi la connessione scelta. Se selezioni il Paese già attivo, non riavvia processi o servizi. Non viene presentato come uno switch realmente privo di riavvio.
+If you choose a different country while the VPN is already connected, the plugin performs a single deterministic reset of the tunnel before the client reloads your chosen connection. Selecting the already active country will not restart any processes or services. This is not presented as a seamless, restart-free switch.
 
-L'alternativa sarebbe il controller gRPC interno di Proton, che autorizza il client ufficiale. Il plugin non aggira questa protezione con injection o patch invasive.
+The alternative would be Proton's internal gRPC controller, which authorizes the official client. This plugin does not bypass that protection through invasive injection or patches.
 
-## Installazione
+## Installation
 
-Puoi installare e aggiornare Proton VPN per Decky dal Plugin Store di [Playhub](https://github.com/LoZazaMastro/Playhub), oppure scaricare lo ZIP dall'[ultima release](https://github.com/LoZazaMastro/Proton-VPN/releases/latest) e installarlo da **Decky → Impostazioni → Sviluppatore → Installa plugin da ZIP**.
+You can install and update Proton VPN for Decky from the [Playhub](https://github.com/LoZazaMastro/Playhub) Plugin Store, or download the ZIP from the [latest release](https://github.com/LoZazaMastro/Proton-VPN/releases/latest) and install it via **Decky → Settings → Developer → Install plugin from ZIP**.
 
-## Licenza
+## License
 
-Il plugin è distribuito con licenza [MIT](LICENSE). Proton VPN e i relativi marchi appartengono a Proton AG; questo progetto è indipendente e non è affiliato o approvato da Proton.
+The plugin is distributed under the [MIT](LICENSE) license. Proton VPN and its related trademarks belong to Proton AG; this project is independent and is not affiliated with or endorsed by Proton.
 
 <div align="center">
 
-Creato e mantenuto da **[LoZazaMastro](https://github.com/LoZazaMastro)**.
+Created and maintained by **[LoZazaMastro](https://github.com/LoZazaMastro)**.
 
 </div>
