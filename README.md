@@ -1,88 +1,53 @@
-# Proton VPN for Decky (Windows)
+<div align="center">
 
-Decky Loader plugin for controlling an installed Proton VPN Windows client from Quick Access without desktop UI automation.
+# Proton VPN per Decky
 
-**Version:** 1.0.0  
-**Author:** LoZazaMastro  
-**Internal build:** `R16.6-auto-steam-language-i18n`
+### La VPN nel QAM, senza trasformare il controller in un mouse.
 
-## QAM layout
+Controlla il client Proton VPN per Windows da Steam Big Picture con stato reale, scelta del Paese e collegamenti recenti.
 
-The panel deliberately stays compact:
+[![Release](https://img.shields.io/github/v/release/LoZazaMastro/Proton-VPN?style=for-the-badge&label=Release&labelColor=111111&color=ffffff)](https://github.com/LoZazaMastro/Proton-VPN/releases/latest)
+[![Licenza MIT](https://img.shields.io/badge/Licenza-MIT-ffffff?style=for-the-badge&labelColor=111111)](LICENSE)
 
-- **Proton VPN** title with plugin icon
-- **VPN** toggle
-- localized **Status** row
-- localized **Country** label
-- text-only country selector
-- one summary card with a **large country flag**, localized country name and:
-  - green closed lock when the VPN is active
-  - red open lock when the VPN is inactive
-- up to six unique recent successful countries in one vertical column
+</div>
 
-Country flags are bundled locally; they are not fetched from the network and are not shown inside the country menu.
+## Proton VPN, senza lasciare Steam
 
-## Localization
+Il plugin controlla un'installazione esistente di Proton VPN e mantiene il pannello essenziale: interruttore, stato, Paese attivo, selettore e gli ultimi sei collegamenti riusciti. Le bandiere sono incluse localmente e i nomi dei Paesi seguono la lingua di Steam.
 
-R16.6 automatically follows the Steam client language through `SteamClient.Settings.GetCurrentLanguage()` and falls back to the browser locale/English only if Steam language detection is unavailable.
+- avvio automatico di `ProtonVPN.Client.exe` quando necessario;
+- stato e Paese letti dagli eventi reali del client Proton;
+- operazioni di connessione e disconnessione serializzate;
+- richieste duplicate verso lo stesso Paese ignorate;
+- fino a sei Paesi recenti, senza duplicati;
+- interfaccia localizzata per tutte le lingue complete attualmente esposte da Steam;
+- layout RTL per l'arabo;
+- nessuna automazione di mouse o tastiera, injection o modifica dei binari Proton.
 
-The QAM UI supports all current Steam full-platform languages:
+## Requisiti
 
-- Arabic
-- Bulgarian
-- Chinese (Simplified)
-- Chinese (Traditional)
-- Czech
-- Danish
-- Dutch
-- English
-- Finnish
-- French
-- German
-- Greek
-- Hungarian
-- Indonesian
-- Italian
-- Japanese
-- Korean
-- Malay
-- Norwegian
-- Polish
-- Portuguese (Portugal)
-- Portuguese (Brazil)
-- Romanian
-- Russian
-- Spanish (Spain)
-- Spanish (Latin America)
-- Swedish
-- Thai
-- Turkish
-- Ukrainian
-- Vietnamese
+- Windows;
+- [Decky Loader](https://decky.xyz) e Steam Big Picture;
+- client ufficiale Proton VPN già installato e autenticato almeno una volta.
 
-Country names are localized dynamically with `Intl.DisplayNames` in the detected Steam locale, with the bundled English country list as a fallback. Arabic uses RTL direction in the QAM content.
+## Limite tecnico attuale
 
-## Connection behavior
+Proton VPN per Windows non espone una CLI pubblica supportata per cambiare Paese. La versione 1.0.0 usa quindi `RecentConnections.bin` e un passaggio temporaneo su `DefaultConnection=Last`.
 
-- Starts `ProtonVPN.Client.exe` automatically when Proton VPN is installed but its client process is not running.
-- Detects the active country from Proton's own client connection log instead of treating the last selected country as the active one.
-- Serializes connect/disconnect operations so QAM refreshes cannot start a second helper operation in parallel.
-- Suppresses duplicate same-country connect requests.
-- If the requested country is already active, no process or service is touched.
-- Keeps up to six unique recent successful countries for quick reconnection.
-- Connection completion uses fresh Proton client-log `Connected` events first, with Windows route detection as fallback.
+Se scegli un Paese diverso mentre la VPN è già connessa, il plugin esegue un singolo reset deterministico del tunnel prima che il client ricarichi la connessione scelta. Se selezioni il Paese già attivo, non riavvia processi o servizi. Non viene presentato come uno switch realmente privo di riavvio.
 
-## Current technical limitation
+L'alternativa sarebbe il controller gRPC interno di Proton, che autorizza il client ufficiale. Il plugin non aggira questa protezione con injection o patch invasive.
 
-The current country-selection mechanism still relies on Proton's `RecentConnections.bin` plus a temporary `DefaultConnection=Last` bootstrap. Proton VPN for Windows does not expose a supported public country-switch CLI.
+## Installazione
 
-For a **real switch from one active country to another**, this stable branch uses one deterministic tunnel reset before the client reloads the selected recent connection. It does **not** claim to be true zero-restart switching. Same-country selections are immediate and do not reset anything.
+Puoi installare e aggiornare Proton VPN per Decky dal Plugin Store di [Playhub](https://github.com/LoZazaMastro/Playhub), oppure scaricare lo ZIP dall'[ultima release](https://github.com/LoZazaMastro/Proton-VPN/releases/latest) e installarlo da **Decky → Impostazioni → Sviluppatore → Installa plugin da ZIP**.
 
-The proper future architecture for zero-service-restart switching is Proton's internal gRPC named-pipe controller. Proton's service authorizes the official `ProtonVPN.Client.exe`, so an external Decky helper cannot simply call that endpoint without invasive techniques. This plugin deliberately does not use UI automation, injection or binary patching.
+## Licenza
 
-## Notes
+Il plugin è distribuito con licenza [MIT](LICENSE). Proton VPN e i relativi marchi appartengono a Proton AG; questo progetto è indipendente e non è affiliato o approvato da Proton.
 
-- Windows only.
-- Proton VPN must already be installed and authenticated at least once.
-- No mouse/keyboard focus automation and no `interact UI` path is used.
-- Public plugin version remains **1.0.0** until intentionally changed.
+<div align="center">
+
+Creato e mantenuto da **[LoZazaMastro](https://github.com/LoZazaMastro)**.
+
+</div>
